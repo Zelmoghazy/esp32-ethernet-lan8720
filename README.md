@@ -55,9 +55,8 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 
 ![alt text](./Images/image-1.png)
 
-* The Reduced Media-Independent Interface (RMII) specification reduces the number of pins between the microcontroller’s external peripherals and the external PHY at a data transmission rate of 10 Mbit/s or 100 Mbit/s. 
-
-* MII includes 16 pins that contain data and control signals, RMII specification reduces it to 7.
+* The **Reduced Media-Independent Interface (RMII)** specification reduces the number of pins between the microcontroller’s external peripherals and the external PHY at a data transmission rate of 10 Mbit/s or 100 Mbit/s. 
+    * MII includes 16 pins that contain data and control signals, RMII specification reduces it to 7.
 
 * **RMII has the following features:**
     * Support for an operating rate of 10 Mbit/s or 100 Mbit/s
@@ -69,14 +68,14 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 
 ## Ways to Generate the Reference Clock
 
-1- Using an externally connected 50MHz crystal oscillator which can be used for both the PHY and MAC
+1- Using an externally connected 50MHz crystal oscillator which can be used for both the PHY and MAC.
 
 <p align="center">
   <img src="./Images/image-3.png"
        width="50%" "/>
 </p>
 
-2- Using an externally lower cost 25MHz fundamental crystal and The PHY outputs a 50MHz clock output to the MAC
+2- Using an externally connected lower cost 25MHz fundamental crystal that The PHY uses to output a 50MHz clock output to the MAC.
 
 <p align="center">
   <img src="./Images/image-4.png"
@@ -105,14 +104,14 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
     * But the `GPIO0` pin have an important role in selecting the Bootloader Mode as the esp32 will enter the serial bootloader (programming mode) when `GPIO0` is held low on reset, otherwise it will run the program in flash.
  
 * The famous workaround for this issue is to disable the reference clk in hardware by default and then re-enable it at the driver installation stage. 
-    * This can be done using the `Enable` pin of the oscillator, you can connect it to the `NC` (not connected) pin of the LAN8720 and use an extra pin (power pin) in the ESP32 to re-enable the oscillator while installing the driver 
+    * This can be done using the `Enable` pin of the oscillator, you can solder it to the `NC` (not connected) pin of the LAN8720 and connect it to an extra pin (power pin) in the ESP32 to disable the oscillator at reset and then re-enable it while installing the driver 
 
-* Sautter made an excellent demonstration here to this workaround :
+* **Sautter made an excellent demonstration here to this workaround** :
     - [Sautter LAN8720](https://sautter.com/blog/ethernet-on-esp32-using-lan8720/)
 
-* **This workaround is problematic for me for two reasons :**
+### This workaround is problematic for me for two reasons :
 
-1- I am using the dev-kit-v1 board which has no `GPIO0` and I didnt really want to solder my chip
+1- I am using the dev-kit-v1 board which has no `GPIO0` and I didnt really want to solder my chip but its possible if you want to.
 
 ![alt text](./Images/image-8.png)
 
@@ -122,24 +121,25 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 
 ## Another Solution
 
-* In the espressif docs I noticed an Important paragraph
+* In the espressif docs I noticed an important paragraph
 
 > What is more, if you are not using PSRAM in your design, GPIO16 and GPIO17 are also available to output the reference clock.
 
-- Using the third way of generating the reference clock, I wont really need the 50 MHz of the external oscillator I can use the ESP32 internal PLL to generate the reference clock and avoid the headache of `GPIO0` all together 
-- My DEVKIT contained `GPIO17` which outputs an Inverted output of 50MHz APLL clock which was found the most stable option for long signal wires.
-
+- Using the third way of generating the reference clock, I wont really need the 50 MHz of the external oscillator I can use the ESP32 internal PLL to generate the reference clock and avoid the headache of `GPIO0` all together. 
+- My DEVKIT contained `GPIO17` which outputs an Inverted output of 50MHz APLL clock which was found to be the most stable option for long signal wires.
 - The only thing needed was to disable the external oscillator all together and use the ESP32 clock instead.
 
 ![alt text](./Images/image-10.png)
 
-- After examining the datasheet you can remove connection by moving the 330 ohm resistors 
+- After examining the datasheet you can remove connection by moving the 33 ohm resistors. 
 
-- I didnt want to modify the board so I just connected the enable pin of the oscillator to the `NC` and just grounded the `NC` permanently.
+- I didnt want to modify the board so I just soldered the enable pin of the oscillator to the `NC` and just grounded the `NC` permanently this way I can still revert to the previous workaround If I wanted to.
 
 ![alt text](./Images/image-11.png)
 
-## Wiring
+## Wiring and Connections
+
+* You cannot change the following connections they are fixed.
 
 | GPIO   | RMII Signal | Notes        |
 | ------ | ----------- | ------------ |
@@ -155,32 +155,36 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 | ------ | -------------------- | ------------ |
 | GPIO17 | EMAC_CLK_180         | REFCLK       |
 
-* SMI (Serial Management Interface) wiring is not fixed. You may need to changed it according to your board schematic. By default they're connected as follows:
+* SMI (Serial Management Interface) wiring is not fixed. 
+    * You may need to changed it according to your board schematic, by default they're connected as follows:
 
 | GPIO   | SMI Signal  | Notes         |
 | ------ | ----------- | ------------- |
 | GPIO23 | MDC         | Output to PHY |
 | GPIO18 | MDIO        | Bidirectional |
 
-* Dont forget to connect the Enable pin of the Oscillator to the `NC` in LAN8720 and connect the `NC` to the ESP32 `GND`
-
+* Dont forget to solder the `Enable` pin of the Oscillator to the `NC` in LAN8720 and connect the `NC` to the ESP32 `GND`.
 
 ![alt text](./Images/image-12.png)
 
 
-
 ## Performance
-* I honestly didnt expect much because the traces was very long but the result was acceptable to me.
+* I honestly didnt expect much because the traces were very long but the result was acceptable to me.
     * I tested it extensively for long periods and I didnt notice any drops or weird behaviour.
 
 ### Latency 
+
+* This measures RTT for small packets at a 100ms rate, its somewhat stable.
+
 ![alt text](./Images/image-13.png)
 
 ### Throughput
+* Using the iperf example in the esp-idf, I honestly didnt have a use case to test the limits of the throughput.
+
 ![alt text](./Images/image-14.png)
-* Using the iperf example 
 
 ## Code
+
 * I am here using the esp-idf, this a minimal driver extracted from the examples.
 
 ```c
@@ -416,12 +420,13 @@ void app_main(void)
 
 
 ## References : 
+* https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_eth.html
+* https://sautter.com/blog/ethernet-on-esp32-using-lan8720/
 * https://github.com/espressif/arduino-esp32/issues/2907
 * https://esp32.com/viewtopic.php?t=5732
 * https://github.com/flusflas/esp32-ethernet
-* https://sautter.com/blog/ethernet-on-esp32-using-lan8720/
 * https://community.home-assistant.io/t/esp32-lan8720-need-help/316270/7
 * https://mischianti.org/integrating-lan8720-with-esp32-for-ethernet-connectivity-with-plain-http-and-ssl-https/
 * https://arduino.ru/forum/apparatnye-voprosy/podklyuchenie-ethernet-lan8720-i-esp32-devkit-c-esp32-devkit-v1
 
- - Special thanks to all the people that shared their knowledge and experience 
+- Special thanks to all the people that shared their knowledge and experience 
