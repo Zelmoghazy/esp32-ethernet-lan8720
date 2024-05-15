@@ -13,7 +13,7 @@
 </p>
 
 
-### High level block diagram of ethernet connection 
+### High level block diagram of Ethernet Connection 
 
 1. **The Media Access Controller (MAC) :** The MAC is usually integrated into a processor and controls the data-link-layer portion of the OSI model. 
     * The data link layer defines the way in which communication takes place over the medium and the frame structure for the transmitted and received messages
