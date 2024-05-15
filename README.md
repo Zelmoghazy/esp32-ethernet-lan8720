@@ -4,13 +4,14 @@
 
 ## Few Notes on Ethernet PHY
 
+* You can safely skip this part if you want to, the connections and code are provided at the end.
+
 <p align="center">
   <img src="./Images/Internet_Model.png"
        width="75%" 
        style="border-radius: 30px;"/>
 </p>
 
-* You can safely skip this part if you want to, the connections and code are provided at the end.
 
 ### High level block diagram of ethernet connection 
 
