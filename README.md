@@ -28,7 +28,7 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 
 <p align="center">
   <img src="./Images/itemeditorimage_5d373394092bf.webp"
-       width="50%" 
+       width="75%" 
        style="border-radius: 30px;"/>
 </p>
 
