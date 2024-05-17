@@ -1,7 +1,7 @@
 # Guide for setting up Ethernet for the ESP32 Development board
 
 - I will be using the LAN8720 PHY as it has driver support in the esp-idf and its very cheap and available, I got mine for around 5$.
-- **Important Note :** The newer ESP32-S2 Modules dropped Ethernet MAC support for some reason, so this guide is only valid for older modules.
+- **Important Note :** The newer ESP32 Modules dropped Ethernet MAC support for some reason, so this guide is only valid for older modules.
     - You can check whether your module has the peripheral and compare between different modules from [ESP Product Selector](https://products.espressif.com/#/product-comparison).
 
 ## Few Notes on Ethernet PHY
