@@ -68,6 +68,8 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 
 ![alt text](./Images/image-2.png)
 
+* ESP-IDF currently only supports the RMII interface.
+
 ## Ways to Generate the Reference Clock
 
 1- Using an externally connected 50MHz crystal oscillator which can be used for both the PHY and MAC.
