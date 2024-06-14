@@ -218,18 +218,24 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
 
-#define ETH_PHY_ADDR         1
-#define ETH_PHY_RST_GPIO    -1          // not connected
-#define ETH_MDC_GPIO        23
-#define ETH_MDIO_GPIO       18
+
+#define ETH_PHY_ADDR             1
+#define ETH_PHY_RST_GPIO        -1          // not connected
+#define ETH_MDC_GPIO            23
+#define ETH_MDIO_GPIO           18
 
 static EventGroupHandle_t s_eth_event_group;
 
-#define ETHERNET_CONNECTED_BIT BIT0
-#define ETHERNET_FAIL_BIT      BIT1
+#define ETHERNET_CONNECTED_BIT  BIT0
+#define ETHERNET_FAIL_BIT       BIT1
 
-#define STATIC_IP 0
+#define STATIC_IP               0
 
+#if STATIC_IP
+    #define S_IP        "192.168.1.5"     
+    #define GATEWAY     "192.168.1.1"    
+    #define NETMASK     "255.255.255.0"
+#endif /* STATIC_IP */
 
 /** Event handler for Ethernet events */
 static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
@@ -286,25 +292,25 @@ static esp_eth_handle_t eth_init_internal(esp_eth_mac_t **mac_out, esp_eth_phy_t
     eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
 
     // Update PHY config based on board specific configuration
-    phy_config.phy_addr = ETH_PHY_ADDR;
-    phy_config.reset_gpio_num = ETH_PHY_RST_GPIO;
+    phy_config.phy_addr         = ETH_PHY_ADDR;
+    phy_config.reset_gpio_num   = ETH_PHY_RST_GPIO;
 
     // Init vendor specific MAC config to default 
     // eth_esp32_emac_config_t esp32_emac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
     eth_esp32_emac_config_t esp32_emac_config = {
-                                                    .smi_mdc_gpio_num  = ETH_MDC_GPIO,                       
-                                                    .smi_mdio_gpio_num = ETH_MDIO_GPIO,                      
-                                                    .interface = EMAC_DATA_INTERFACE_RMII,        
-                                                    .clock_config =                               
-                                                    {                                             
-                                                        .rmii =                                   
-                                                        {                                         
-                                                            .clock_mode = EMAC_CLK_OUT,             // Output clk from ESP32
-                                                            .clock_gpio = EMAC_CLK_OUT_180_GPIO     // Choose GPIO17   
-                                                        }                                         
-                                                    },                                            
-                                                    .dma_burst_len = ETH_DMA_BURST_LEN_32 
-                                                };
+        .smi_mdc_gpio_num  = ETH_MDC_GPIO,                       
+        .smi_mdio_gpio_num = ETH_MDIO_GPIO,                      
+        .interface = EMAC_DATA_INTERFACE_RMII,        
+        .clock_config =                               
+        {                                             
+            .rmii =                                   
+            {                                         
+                .clock_mode = EMAC_CLK_OUT,             // Output clk from ESP32
+                .clock_gpio = EMAC_CLK_OUT_180_GPIO     // Choose GPIO17   
+            }                                         
+        },                                            
+        .dma_burst_len = ETH_DMA_BURST_LEN_32 
+    };
 
     // Create new ESP32 Ethernet MAC instance
     esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&esp32_emac_config, &mac_config);
@@ -338,31 +344,13 @@ err:
     return ret;
 }
 
-esp_err_t eth_init(esp_eth_handle_t *eth_handle_out)
-{
-    esp_err_t ret = ESP_OK;
-    esp_eth_handle_t eth_handle = NULL;
-
-    ESP_GOTO_ON_FALSE(eth_handle_out != NULL, ESP_ERR_INVALID_ARG, err, ETH_TAG, "invalid arguments");
-
-    eth_handle = eth_init_internal(NULL, NULL);
-    ESP_GOTO_ON_FALSE(eth_handle, ESP_FAIL, err, ETH_TAG, "internal Ethernet init failed");
-
-    ESP_LOGD(ETH_TAG, "no Ethernet device selected to init");
-    *eth_handle_out = eth_handle;
-
-    return ret;
-err:
-    return ret;
-}
-
 void ethernet_setup(void)
 {
     s_eth_event_group = xEventGroupCreate();
 
     // Initialize Ethernet driver
     esp_eth_handle_t eth_handle;
-    ESP_ERROR_CHECK(eth_init(&eth_handle));
+    eth_handle = eth_init_internal(NULL, NULL);
 
     // Initialize TCP/IP network interface aka the esp-netif (should be called only once in application)
     ESP_ERROR_CHECK(esp_netif_init());
