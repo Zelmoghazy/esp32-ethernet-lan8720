@@ -35,7 +35,20 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
        style="border-radius: 30px;"/>
 </p>
 
-* The ESP32 already contains an Internal Ethernet Media Access Controller (MAC) and it can send and recieve data by using the external Ethernet PHY (physical layer), here comes the role of the LAN8720 which provides everything from the PHY to the RJ45 Connector in a small easy to use package
+* The ESP32 already contains an Internal Ethernet Media Access Controller (MAC) and it can send and receive data by using an external ethernet PHY (physical layer), here comes the role of the **LAN8720** which provides everything from the PHY to the RJ45 Connector in a small easy to use package.
+
+<p align="center">
+  <img src="./Images/image-6.png"
+       width="75%" 
+       style="border-radius: 30px;"/>
+</p>
+
+<p align="center">
+  <img src="./Images/LAN8720-board.png"
+       width="75%" 
+       style="border-radius: 30px;"/>
+</p>
+
 
 * **The communication between MAC and PHY can have diverse choices:**
     * **MII** (Media Independent Interface)
@@ -64,7 +77,7 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
     * Support for an operating rate of 10 Mbit/s or 100 Mbit/s
     * The reference clock frequency **must be 50 MHz**.
     * The same reference clock must be provided externally both to the MAC and the external Ethernet PHY.
-    * It provides independent 2-bit-wide Tx and Rx data paths.
+    * It provides independent 2-bit-wide TX and RX data paths.
 
 ![alt text](./Images/image-2.png)
 
@@ -79,7 +92,7 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
        width="50%" "/>
 </p>
 
-2- Using an externally connected lower cost 25MHz fundamental crystal that The PHY uses to output a 50MHz clock output to the MAC.
+2- Using an externally connected lower-cost 25MHz fundamental crystal, the PHY can use it to generate a 50MHz clock output for the MAC.
 
 <p align="center">
   <img src="./Images/image-4.png"
@@ -98,30 +111,30 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 
 # Problem 
 
-![alt text](./Images/image-6.png)
+![Oscillator](./Images/Osc.png)
 
-![alt text](./Images/image-7.png)
+![LAN8720 Block Diagram](./Images/image-7.png)
 
 - The LAN8720 board contains an external 50 MHz oscillator so the first way to generate reference clock is the logical option, but !
 
-* `GPIO0` is the only choice to input the reference clock in the ESP32
-    * But the `GPIO0` pin have an important role in selecting the Bootloader Mode as the esp32 will enter the serial bootloader (programming mode) when `GPIO0` is held low on reset, otherwise it will run the program in flash.
+* `GPIO0` is the only choice to input the reference clock in the ESP32.
+    * But the `GPIO0` pin have an important role in selecting the Bootloader Mode as the ESP32 will enter the serial bootloader (programming mode) when `GPIO0` is held low on reset, otherwise it will run the program in flash.
  
 * The famous workaround for this issue is to disable the reference clk in hardware by default and then re-enable it at the driver installation stage. 
-    * This can be done using the `Enable` pin of the oscillator, you can solder it to the `NC` (not connected) pin of the LAN8720 and connect it to an extra pin (power pin) in the ESP32 to disable the oscillator at reset and then re-enable it while installing the driver 
+    * This can be done using the `Enable` pin of the oscillator, you can solder it to the `NC` (not connected) pin of the LAN8720 and connect it to an extra pin (power pin) in the ESP32 to disable the oscillator at reset and then re-enable it while installing the driver. 
 
 * **Sautter made an excellent demonstration here to this workaround** :
     - [Sautter LAN8720](https://sautter.com/blog/ethernet-on-esp32-using-lan8720/)
 
 ### This workaround is problematic for me for two reasons :
 
-1- I am using the dev-kit-v1 board which has no `GPIO0` and I didnt really want to solder my chip but its possible if you want to.
+1. I am using the dev-kit-v1 board which has no `GPIO0` and I didn't really want to solder my chip but its possible if you want to.
 
 ![alt text](./Images/image-8.png)
 
 ![alt text](./Images/image-9.png)
 
-2- it requires a modification to the ethernet driver and an extra "power pin" which I didnt like.
+2.  It requires a modification to the ethernet driver and an extra "power pin" which I didnt like.
 
 ## Another Solution
 
@@ -129,15 +142,15 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 
 > What is more, if you are not using PSRAM in your design, GPIO16 and GPIO17 are also available to output the reference clock.
 
-- Using the third way of generating the reference clock, I wont really need the 50 MHz of the external oscillator I can use the ESP32 internal PLL to generate the reference clock and avoid the headache of `GPIO0` all together. 
-- My DEVKIT contained `GPIO17` which outputs an Inverted output of 50MHz APLL clock which was found to be the most stable option for long signal wires.
+- Using the third way of generating the reference clock, I won't really need the 50 MHz of the external oscillator I can use the ESP32 internal PLL to generate the reference clock and avoid the headache of `GPIO0` all together. 
+- My dev-kit contains `GPIO17` which outputs an Inverted output of 50MHz APLL clock and was found to be the most stable option for long signal wires.
 - The only thing needed was to disable the external oscillator all together and use the ESP32 clock instead.
 
 ![alt text](./Images/image-10.png)
 
-- After examining the datasheet you can remove connection by moving the 33 ohm resistors. 
+- After reviewing the LAN8720 datasheet, I discovered that the oscillator connection can be entirely removed by repositioning the 33-ohm resistors.
 
-- I didnt want to modify the board so I just soldered the enable pin of the oscillator to the `NC` and just grounded the `NC` permanently this way I can still revert to the previous workaround If I wanted to.
+- I didnt want to modify the board and fortunately the oscillator has an enable pin, so I just soldered the enable pin of the oscillator to the `NC` in the LAN8720 and just grounded the `NC` permanently, this way I can still revert to the previous workarounds If I wanted to.
 
 ![alt text](./Images/image-11.png)
 
@@ -173,7 +186,7 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 
 
 ## Performance
-* I honestly didnt expect much because the traces were very long but the result was acceptable to me.
+* I honestly didn't expect much because the traces were very long but the result was acceptable to me.
     * I tested it extensively for long periods and I didnt notice any drops or weird behaviour.
 
 ### Latency 
@@ -183,13 +196,13 @@ approach to cabling up USB, whereby standard connectors, with a standard pinout 
 ![alt text](./Images/image-13.png)
 
 ### Throughput
-* Using the iperf example in the esp-idf, I honestly didnt have a use case to test the limits of the throughput.
+* Using the `iperf` example from the esp-idf, I honestly didn't have a use case to test the limits of the throughput.
 
 ![alt text](./Images/image-14.png)
 
 ## Code
 
-* I am here using the esp-idf, this is a minimal driver extracted from the examples.
+* I am here using the esp-idf, this is a minimal driver extracted from the examples, I also added the option to use a static ip.
 
 ```c
 #include <stdio.h>
